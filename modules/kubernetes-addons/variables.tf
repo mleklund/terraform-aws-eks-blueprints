@@ -689,10 +689,16 @@ variable "enable_vault" {
   default     = false
 }
 
-variable "enable_vault_auto_unseal" {
-  description = "Enable HashiCorp Vault auto-unseal"
-  type        = bool
-  default     = false
+variable "vault_auto_unseal_key_arn" {
+  type        = string
+  default     = null
+  description = "Optional auto-unseal key arn."
+}
+
+variable "vault_auto_unseal_key_id" {
+  type        = string
+  default     = null
+  description = "Optional auto-unseal key id. Only needed if you are auto unsealing, and not replacing default helm config."
 }
 
 variable "vault_helm_config" {
