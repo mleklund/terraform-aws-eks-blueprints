@@ -689,6 +689,12 @@ variable "enable_vault" {
   default     = false
 }
 
+variable "enable_vault_auto_unseal" {
+  description = "Enable HashiCorp Vault auto-unseal"
+  type        = bool
+  default     = false
+}
+
 variable "vault_helm_config" {
   description = "HashiCorp Vault Helm Chart config"
   type        = any

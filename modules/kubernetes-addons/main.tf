@@ -284,12 +284,14 @@ module "vault" {
   count = var.enable_vault ? 1 : 0
 
   # See https://registry.terraform.io/modules/hashicorp/hashicorp-vault-eks-addon/aws/
-  source  = "hashicorp/hashicorp-vault-eks-addon/aws"
-  version = "0.9.0"
+  #source  = "hashicorp/hashicorp-vault-eks-addon/aws"
+  #version = "0.9.0"
+  source   = "github.com/mleklund/terraform-aws-hashicorp-vault-eks-addon.git//?aws_unseal"
 
   helm_config       = var.vault_helm_config
   manage_via_gitops = var.argocd_manage_add_ons
   addon_context     = local.addon_context
+  auto_unseal       = var.enable_vault_auto_unseal
 }
 
 module "vpa" {
