@@ -288,10 +288,11 @@ module "vault" {
   #version = "0.9.0"
   source = "github.com/mleklund/terraform-aws-hashicorp-vault-eks-addon.git//?ref=aws_unseal"
 
-  helm_config       = var.vault_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
-  auto_unseal       = var.enable_vault_auto_unseal
+  helm_config         = var.vault_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  auto_unseal_key_arn = var.vault_auto_unseal_key_arn
+  auto_unseal_key_id  = var.vault_auto_unseal_key_id
 }
 
 module "vpa" {
