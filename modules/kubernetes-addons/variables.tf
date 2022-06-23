@@ -689,16 +689,22 @@ variable "enable_vault" {
   default     = false
 }
 
-variable "vault_auto_unseal_key_arn" {
-  type        = string
-  default     = null
-  description = "Optional auto-unseal key arn."
+variable "vault_auto_unseal" {
+  description = "Enable auto-unseal"
+  type        = bool
+  default     = false
 }
 
-variable "vault_auto_unseal_key_id" {
+variable "vault_auto_unseal_kms_key_arn" {
+  description = "Optional auto-unseal key arn."
   type        = string
-  default     = null
+  default     = ""
+}
+
+variable "vault_auto_unseal_kms_key_id" {
   description = "Optional auto-unseal key id. Only needed if you are auto unsealing, and not replacing default helm config."
+  type        = string
+  default     = "" 
 }
 
 variable "vault_helm_config" {
