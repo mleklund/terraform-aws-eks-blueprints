@@ -3,24 +3,20 @@ provider "aws" {
 }
 
 provider "kubernetes" {
-  host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
+  host                   = module.eks_blueprints.eks_cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks_blueprints.eks_cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.this.token
 }
 
 provider "helm" {
   kubernetes {
-    host                   = data.aws_eks_cluster.cluster.endpoint
-    token                  = data.aws_eks_cluster_auth.cluster.token
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+    host                   = module.eks_blueprints.eks_cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks_blueprints.eks_cluster_certificate_authority_data)
+    token                  = data.aws_eks_cluster_auth.this.token
   }
 }
 
-data "aws_eks_cluster" "cluster" {
-  name = module.eks_blueprints.eks_cluster_id
-}
-
-data "aws_eks_cluster_auth" "cluster" {
+data "aws_eks_cluster_auth" "this" {
   name = module.eks_blueprints.eks_cluster_id
 }
 
@@ -34,9 +30,8 @@ locals {
   name   = basename(path.cwd)
   region = "us-west-2"
 
-  vpc_cidr  = "10.0.0.0/16"
-  azs       = slice(data.aws_availability_zones.available.names, 0, 3)
-  s3_prefix = "logs/"
+  vpc_cidr = "10.0.0.0/16"
+  azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
   tags = {
     Blueprint  = local.name
@@ -172,7 +167,7 @@ module "eks_blueprints_kubernetes_addons" {
         serviceAccount:
           create: false
 
-        sparkHistoryOpts: "-Dspark.history.fs.logDirectory=s3a://${aws_s3_bucket.this.id}/${local.s3_prefix}"
+        sparkHistoryOpts: "-Dspark.history.fs.logDirectory=s3a://${aws_s3_bucket.this.id}/${aws_s3_object.this.key}"
 
         # Update spark conf according to your needs
         sparkConf: |-
@@ -210,6 +205,13 @@ module "eks_blueprints_kubernetes_addons" {
 
   tags = local.tags
 
+  # This is required when using terraform apply with target option
+  depends_on = [
+    aws_s3_bucket_acl.this,
+    aws_s3_bucket_public_access_block.this,
+    aws_s3_bucket_server_side_encryption_configuration.this,
+    aws_s3_object.this
+  ]
 }
 
 #---------------------------------------------------------------
@@ -319,8 +321,14 @@ resource "aws_s3_bucket_public_access_block" "this" {
 
 # Creating an s3 bucket prefix. Ensure you copy spark event logs under this path to visualize the dags
 resource "aws_s3_object" "this" {
-  bucket = aws_s3_bucket.this.id
-  acl    = "private"
-  key    = local.s3_prefix
-  source = "/dev/null"
+  bucket       = aws_s3_bucket.this.id
+  acl          = "private"
+  key          = "logs/"
+  content_type = "application/x-directory"
+
+  depends_on = [
+    aws_s3_bucket_acl.this,
+    aws_s3_bucket_public_access_block.this,
+    aws_s3_bucket_server_side_encryption_configuration.this
+  ]
 }
